@@ -2,8 +2,8 @@
 <html lang="en">
 <head>
     <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>JA Construction | Data Extraction Ready</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JA Construction | Mobile Master</title>
     <style>
         :root {
             --ja-orange: #FF6B00;
@@ -20,129 +20,128 @@
             background-color: #080808;
             font-family: 'Segoe UI', Arial, sans-serif;
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
-            align-items: center;
-            height: 100vh;
+            min-height: 100vh;
             color: var(--white);
+            overflow-x: hidden;
         }
 
+        /* Responsive Container */
         .main-container {
-            width: 1150px;
-            height: 680px;
+            width: 100%;
+            max-width: 1200px;
             display: flex;
+            flex-direction: row; /* Desktop default */
             background: var(--ja-dark-main);
-            border-radius: 25px;
-            overflow: hidden;
-            box-shadow: 0 0 80px rgba(0,0,0,0.8);
-            border: 1px solid #222;
+            min-height: 100vh;
         }
 
-        /* LEFT PANEL */
+        /* LEFT PANEL (Main Monitor) */
         .left-panel {
-            flex: 1.8;
-            padding: 30px;
+            flex: 1.5;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             align-items: center;
+            justify-content: center;
             background: linear-gradient(145deg, #161617 0%, #0c0c0d 100%);
         }
 
-        .sys-clock {
-            color: #555;
-            font-weight: bold;
-            font-size: 14px;
-            letter-spacing: 2px;
-            margin-bottom: 10px;
-        }
+        .sys-clock { color: #555; font-weight: bold; font-size: 14px; margin-bottom: 10px; }
 
         .crane-icon {
-            font-size: 85px;
+            font-size: 60px;
             color: var(--ja-orange);
-            filter: drop-shadow(0 0 15px rgba(255, 107, 0, 0.4));
+            filter: drop-shadow(0 0 10px rgba(255, 107, 0, 0.4));
         }
 
         .brand-logo-area h1 {
-            font-size: 60px;
+            font-size: clamp(30px, 8vw, 55px); /* Autofit text */
             margin: 0;
             font-weight: 900;
             color: var(--ja-orange);
-            text-transform: uppercase;
+            text-align: center;
         }
 
         .timer-display {
-            font-size: 165px;
+            font-size: clamp(60px, 15vw, 150px); /* Autofit timer */
             font-weight: 900;
             margin: 10px 0;
             font-family: 'Arial Black', sans-serif;
             color: #FFF;
         }
 
-        .button-group { width: 90%; display: flex; gap: 20px; }
+        .button-group { width: 100%; display: flex; gap: 10px; max-width: 500px; }
 
         .btn {
-            flex: 1; padding: 22px; border: none; border-radius: 15px;
-            font-size: 24px; font-weight: 900; cursor: pointer;
-            text-transform: uppercase; color: white; transition: 0.2s;
+            flex: 1; padding: 18px; border: none; border-radius: 12px;
+            font-size: clamp(14px, 4vw, 20px); font-weight: 900; cursor: pointer;
+            text-transform: uppercase; color: white;
         }
 
         .btn-ot { background-color: var(--purple); }
         .btn-in { background-color: var(--green); }
         .btn-out { background-color: var(--red); }
-        .btn:hover { transform: translateY(-3px); filter: brightness(1.1); }
 
-        /* SIDEBAR */
+        /* SIDEBAR (Activity & Controls) */
         .sidebar {
-            flex: 0.9;
+            flex: 1;
             background-color: var(--ja-sidebar-dark);
-            padding: 30px;
+            padding: 20px;
             display: flex;
             flex-direction: column;
             border-left: 1px solid #222;
         }
 
         .sidebar-header {
-            background: #000; padding: 15px; border-radius: 15px;
-            text-align: center; margin-bottom: 20px; border: 1px solid #333;
+            background: #000; padding: 12px; border-radius: 12px;
+            text-align: center; margin-bottom: 15px; border: 1px solid #333;
         }
 
-        .sidebar-header h2 { color: var(--ja-orange); font-size: 18px; margin: 0; }
+        .sidebar-header h2 { color: var(--ja-orange); font-size: 16px; margin: 0; }
 
         .input-box {
-            background: var(--ja-card-dark); padding: 15px; border-radius: 15px;
-            margin-bottom: 15px; border-left: 6px solid var(--ja-orange);
+            background: var(--ja-card-dark); padding: 12px; border-radius: 12px;
+            margin-bottom: 10px; border-left: 5px solid var(--ja-orange);
         }
 
-        .input-box label { font-size: 10px; font-weight: bold; color: #666; text-transform: uppercase; }
+        .input-box label { font-size: 9px; font-weight: bold; color: #666; }
 
         .input-box input, .input-box .status {
             width: 100%; border: none; background: transparent;
-            font-size: 18px; font-weight: 900; margin-top: 5px;
-            outline: none; color: var(--white);
+            font-size: 16px; font-weight: 900; color: var(--white); outline: none;
         }
 
         .log-section {
-            flex-grow: 1; background: #0D0D0E; border-radius: 15px;
-            padding: 15px; border: 1px solid #222; overflow-y: auto; margin-bottom: 15px;
+            flex-grow: 1; background: #0D0D0E; border-radius: 12px;
+            padding: 10px; border: 1px solid #222; overflow-y: auto; 
+            margin-bottom: 15px; min-height: 150px;
         }
 
         .log-item {
             display: flex; justify-content: space-between;
-            font-size: 11px; padding: 8px 0;
-            border-bottom: 1px solid #1A1A1A; color: #888;
+            font-size: 10px; padding: 8px 0; border-bottom: 1px solid #1A1A1A;
         }
 
-        /* EXTRACTION BUTTON */
         .btn-extract {
-            background-color: transparent; color: var(--ja-orange);
-            border: 1px solid var(--ja-orange); padding: 12px;
-            border-radius: 10px; font-weight: bold; cursor: pointer;
-            text-transform: uppercase; font-size: 12px; transition: 0.3s;
+            background-color: var(--ja-orange); color: black;
+            border: none; padding: 15px; border-radius: 10px;
+            font-weight: bold; cursor: pointer; text-transform: uppercase;
         }
 
-        .btn-extract:hover { background-color: var(--ja-orange); color: black; }
+        .btn-clear {
+            background: transparent; color: #555; border: none;
+            font-size: 10px; margin-top: 10px; cursor: pointer;
+        }
 
-        .ready-txt { margin-top: 15px; font-weight: bold; color: var(--green); font-size: 13px; }
+        /* MOBILE ADJUSTMENTS */
+        @media (max-width: 768px) {
+            .main-container { flex-direction: column; }
+            .sidebar { border-left: none; border-top: 1px solid #222; }
+            .left-panel { min-height: 60vh; }
+        }
     </style>
 </head>
 <body>
@@ -150,36 +149,30 @@
 <div class="main-container">
     <div class="left-panel">
         <div class="sys-clock" id="sysClock">00:00:00 AM</div>
-        <div class="brand-logo-area">
-            <div class="crane-icon">🏗️</div>
-            <h1>JA CONSTRUCTION</h1>
-        </div>
+        <div class="crane-icon">🏗️</div>
+        <div class="brand-logo-area"><h1>JA CONSTRUCTION</h1></div>
         <div class="timer-display" id="mainTimer">00:00:00</div>
         <div class="button-group">
-            <button class="btn btn-ot">OVERTIME</button>
+            <button class="btn btn-ot">OT</button>
             <button class="btn btn-in" id="actionBtn" onclick="handleTime()">TIME IN</button>
         </div>
-        <div class="ready-txt">READY TO RECORD</div>
     </div>
 
     <div class="sidebar">
         <div class="sidebar-header">
             <h2>OFFICIAL MONITOR</h2>
-            <div style="font-size: 9px; color: #555;">JA CONSTRUCTION SYSTEM</div>
         </div>
         <div class="input-box">
-            <label>Operator Name</label>
-            <input type="text" id="opName" placeholder="ENTER NAME...">
+            <label>OPERATOR NAME</label>
+            <input type="text" id="opName" placeholder="TAP TO ENTER...">
         </div>
         <div class="input-box">
-            <label>Current Status</label>
+            <label>STATUS</label>
             <div id="curStatus" class="status">OFFLINE</div>
         </div>
-        <div class="log-section">
-            <label style="font-size: 10px; color: #444; margin-bottom: 10px; display: block;">ACTIVITY LOGS</label>
-            <div id="logList"></div>
-        </div>
-        <button class="btn-extract" onclick="extractLogs()">Extract Logs (.txt)</button>
+        <div class="log-section" id="logList"></div>
+        <button class="btn-extract" onclick="extractLogs()">Extract All Logs</button>
+        <button class="btn-clear" onclick="clearLogs()">Clear History</button>
     </div>
 </div>
 
@@ -187,7 +180,8 @@
     let timer;
     let sec = 0;
     let isWorking = false;
-    let logData = []; // Array to store logs for extraction
+
+    window.onload = displayLogs;
 
     setInterval(() => {
         document.getElementById('sysClock').innerText = new Date().toLocaleTimeString();
@@ -199,7 +193,7 @@
         const btn = document.getElementById('actionBtn');
         const status = document.getElementById('curStatus');
 
-        if (!name) { alert("Pakilagay ang pangalan!"); return; }
+        if (!name) { alert("Please enter name!"); return; }
 
         if (!isWorking) {
             isWorking = true;
@@ -208,7 +202,8 @@
             btn.className = "btn btn-out";
             status.innerText = "ONLINE";
             status.style.color = "#2ECC71";
-            addLog("TIME IN", name.toUpperCase());
+            saveLog("TIME IN", name.toUpperCase());
+            
             timer = setInterval(() => {
                 sec++;
                 let h = Math.floor(sec / 3600).toString().padStart(2, '0');
@@ -219,7 +214,9 @@
         } else {
             isWorking = false;
             clearInterval(timer);
-            addLog("TIME OUT", name.toUpperCase(), document.getElementById('mainTimer').innerText);
+            const duration = document.getElementById('mainTimer').innerText;
+            saveLog("TIME OUT", name.toUpperCase(), duration);
+            
             btn.innerText = "TIME IN";
             btn.className = "btn btn-in";
             status.innerText = "OFFLINE";
@@ -230,32 +227,48 @@
         }
     }
 
-    function addLog(action, name, duration = "") {
-        const list = document.getElementById('logList');
+    function saveLog(action, name, duration = "") {
         const now = new Date();
-        const dateStr = now.toLocaleDateString(); // "5/15/2026"
-        const timeStr = now.toLocaleTimeString(); // "11:05 AM"
-        
-        // Log entry for display
-        const displayMsg = duration ? `${action} (${duration})` : action;
-        list.innerHTML = `<div class="log-item"><span>${displayMsg}</span><span>${timeStr}</span></div>` + list.innerHTML;
+        const newLog = {
+            date: now.toLocaleDateString(),
+            time: now.toLocaleTimeString(),
+            name: name,
+            action: action,
+            duration: duration || 'N/A'
+        };
+        let logs = JSON.parse(localStorage.getItem('ja_logs')) || [];
+        logs.push(newLog);
+        localStorage.setItem('ja_logs', JSON.stringify(logs));
+        displayLogs();
+    }
 
-        // Log entry for extraction (Separated Date and Time)
-        // Format: DATE | TIME | OPERATOR | ACTION | DURATION
-        const rawLog = `${dateStr} | ${timeStr} | ${name} | ${action} | ${duration || 'N/A'}`;
-        logData.push(rawLog);
+    function displayLogs() {
+        const list = document.getElementById('logList');
+        let logs = JSON.parse(localStorage.getItem('ja_logs')) || [];
+        list.innerHTML = logs.slice().reverse().map(log => `
+            <div class="log-item">
+                <span><b>${log.name}</b>: ${log.action}</span>
+                <span>${log.time}</span>
+            </div>
+        `).join('');
     }
 
     function extractLogs() {
-        if (logData.length === 0) { alert("Walang logs na pwedeng i-extract!"); return; }
-        
-        // Header for the text file
-        const header = "DATE | TIME | OPERATOR | ACTION | DURATION\n" + "--------------------------------------------------\n";
-        const blob = new Blob([header + logData.join('\n')], { type: 'text/plain' });
+        let logs = JSON.parse(localStorage.getItem('ja_logs')) || [];
+        if (logs.length === 0) return alert("No logs found!");
+        let content = "DATE | TIME | OPERATOR | ACTION | DURATION\n" + logs.map(l => `${l.date} | ${l.time} | ${l.name} | ${l.action} | ${l.duration}`).join('\n');
+        const blob = new Blob([content], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `JA_Construction_Report_${new Date().toLocaleDateString().replace(/\//g, '-')}.txt`;
+        a.download = `JA_Logs_${new Date().toLocaleDateString()}.txt`;
         a.click();
+    }
+
+    function clearLogs() {
+        if (confirm("Delete all history?")) {
+            localStorage.removeItem('ja_logs');
+            displayLogs();
+        }
     }
 </script>
 
