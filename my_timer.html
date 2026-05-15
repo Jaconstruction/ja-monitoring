@@ -1,276 +1,56 @@
-<!DOCTYPE html>
-<html lang="en">
-<head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
-    <title>JA Construction | Mobile Master</title>
-    <style>
-        :root {
-            --ja-orange: #FF6B00;
-            --ja-dark-main: #121212;
-            --ja-sidebar-dark: #1A1A1B;
-            --ja-card-dark: #242425;
-            --white: #E0E0E0;
-            --green: #2ECC71;
-            --purple: #9B59B6;
-            --red: #E74C3C;
-        }
+// Heto ang magsisilbing "Baul" sa internet para magkita-kita ang data niyo
+const API_URL = "https://api.jsonbin.io/v3/b/66448839ad19ca34f868cc8a"; 
+const API_KEY = "$2a$10$7Z/m6YmYyM5H2Z6.o6.o6.o6.o6.o6.o6.o"; // Sample key lang ito
 
-        body {
-            background-color: #080808;
-            font-family: 'Segoe UI', Arial, sans-serif;
-            margin: 0;
-            padding: 0;
-            display: flex;
-            justify-content: center;
-            min-height: 100vh;
-            color: var(--white);
-            overflow-x: hidden;
-        }
-
-        /* Responsive Container */
-        .main-container {
-            width: 100%;
-            max-width: 1200px;
-            display: flex;
-            flex-direction: row; /* Desktop default */
-            background: var(--ja-dark-main);
-            min-height: 100vh;
-        }
-
-        /* LEFT PANEL (Main Monitor) */
-        .left-panel {
-            flex: 1.5;
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            align-items: center;
-            justify-content: center;
-            background: linear-gradient(145deg, #161617 0%, #0c0c0d 100%);
-        }
-
-        .sys-clock { color: #555; font-weight: bold; font-size: 14px; margin-bottom: 10px; }
-
-        .crane-icon {
-            font-size: 60px;
-            color: var(--ja-orange);
-            filter: drop-shadow(0 0 10px rgba(255, 107, 0, 0.4));
-        }
-
-        .brand-logo-area h1 {
-            font-size: clamp(30px, 8vw, 55px); /* Autofit text */
-            margin: 0;
-            font-weight: 900;
-            color: var(--ja-orange);
-            text-align: center;
-        }
-
-        .timer-display {
-            font-size: clamp(60px, 15vw, 150px); /* Autofit timer */
-            font-weight: 900;
-            margin: 10px 0;
-            font-family: 'Arial Black', sans-serif;
-            color: #FFF;
-        }
-
-        .button-group { width: 100%; display: flex; gap: 10px; max-width: 500px; }
-
-        .btn {
-            flex: 1; padding: 18px; border: none; border-radius: 12px;
-            font-size: clamp(14px, 4vw, 20px); font-weight: 900; cursor: pointer;
-            text-transform: uppercase; color: white;
-        }
-
-        .btn-ot { background-color: var(--purple); }
-        .btn-in { background-color: var(--green); }
-        .btn-out { background-color: var(--red); }
-
-        /* SIDEBAR (Activity & Controls) */
-        .sidebar {
-            flex: 1;
-            background-color: var(--ja-sidebar-dark);
-            padding: 20px;
-            display: flex;
-            flex-direction: column;
-            border-left: 1px solid #222;
-        }
-
-        .sidebar-header {
-            background: #000; padding: 12px; border-radius: 12px;
-            text-align: center; margin-bottom: 15px; border: 1px solid #333;
-        }
-
-        .sidebar-header h2 { color: var(--ja-orange); font-size: 16px; margin: 0; }
-
-        .input-box {
-            background: var(--ja-card-dark); padding: 12px; border-radius: 12px;
-            margin-bottom: 10px; border-left: 5px solid var(--ja-orange);
-        }
-
-        .input-box label { font-size: 9px; font-weight: bold; color: #666; }
-
-        .input-box input, .input-box .status {
-            width: 100%; border: none; background: transparent;
-            font-size: 16px; font-weight: 900; color: var(--white); outline: none;
-        }
-
-        .log-section {
-            flex-grow: 1; background: #0D0D0E; border-radius: 12px;
-            padding: 10px; border: 1px solid #222; overflow-y: auto; 
-            margin-bottom: 15px; min-height: 150px;
-        }
-
-        .log-item {
-            display: flex; justify-content: space-between;
-            font-size: 10px; padding: 8px 0; border-bottom: 1px solid #1A1A1A;
-        }
-
-        .btn-extract {
-            background-color: var(--ja-orange); color: black;
-            border: none; padding: 15px; border-radius: 10px;
-            font-weight: bold; cursor: pointer; text-transform: uppercase;
-        }
-
-        .btn-clear {
-            background: transparent; color: #555; border: none;
-            font-size: 10px; margin-top: 10px; cursor: pointer;
-        }
-
-        /* MOBILE ADJUSTMENTS */
-        @media (max-width: 768px) {
-            .main-container { flex-direction: column; }
-            .sidebar { border-left: none; border-top: 1px solid #222; }
-            .left-panel { min-height: 60vh; }
-        }
-    </style>
-</head>
-<body>
-
-<div class="main-container">
-    <div class="left-panel">
-        <div class="sys-clock" id="sysClock">00:00:00 AM</div>
-        <div class="crane-icon">🏗️</div>
-        <div class="brand-logo-area"><h1>JA CONSTRUCTION</h1></div>
-        <div class="timer-display" id="mainTimer">00:00:00</div>
-        <div class="button-group">
-            <button class="btn btn-ot">OT</button>
-            <button class="btn btn-in" id="actionBtn" onclick="handleTime()">TIME IN</button>
-        </div>
-    </div>
-
-    <div class="sidebar">
-        <div class="sidebar-header">
-            <h2>OFFICIAL MONITOR</h2>
-        </div>
-        <div class="input-box">
-            <label>OPERATOR NAME</label>
-            <input type="text" id="opName" placeholder="TAP TO ENTER...">
-        </div>
-        <div class="input-box">
-            <label>STATUS</label>
-            <div id="curStatus" class="status">OFFLINE</div>
-        </div>
-        <div class="log-section" id="logList"></div>
-        <button class="btn-extract" onclick="extractLogs()">Extract All Logs</button>
-        <button class="btn-clear" onclick="clearLogs()">Clear History</button>
-    </div>
-</div>
-
-<script>
-    let timer;
-    let sec = 0;
-    let isWorking = false;
-
-    window.onload = displayLogs;
-
-    setInterval(() => {
-        document.getElementById('sysClock').innerText = new Date().toLocaleTimeString();
-    }, 1000);
-
-    function handleTime() {
-        const nameInput = document.getElementById('opName');
-        const name = nameInput.value;
-        const btn = document.getElementById('actionBtn');
-        const status = document.getElementById('curStatus');
-
-        if (!name) { alert("Please enter name!"); return; }
-
-        if (!isWorking) {
-            isWorking = true;
-            nameInput.disabled = true;
-            btn.innerText = "TIME OUT";
-            btn.className = "btn btn-out";
-            status.innerText = "ONLINE";
-            status.style.color = "#2ECC71";
-            saveLog("TIME IN", name.toUpperCase());
-            
-            timer = setInterval(() => {
-                sec++;
-                let h = Math.floor(sec / 3600).toString().padStart(2, '0');
-                let m = Math.floor((sec % 3600) / 60).toString().padStart(2, '0');
-                let s = (sec % 60).toString().padStart(2, '0');
-                document.getElementById('mainTimer').innerText = `${h}:${m}:${s}`;
-            }, 1000);
-        } else {
-            isWorking = false;
-            clearInterval(timer);
-            const duration = document.getElementById('mainTimer').innerText;
-            saveLog("TIME OUT", name.toUpperCase(), duration);
-            
-            btn.innerText = "TIME IN";
-            btn.className = "btn btn-in";
-            status.innerText = "OFFLINE";
-            status.style.color = "#E0E0E0";
-            nameInput.disabled = false;
-            sec = 0;
-            document.getElementById('mainTimer').innerText = "00:00:00";
-        }
-    }
-
-    function saveLog(action, name, duration = "") {
-        const now = new Date();
-        const newLog = {
-            date: now.toLocaleDateString(),
-            time: now.toLocaleTimeString(),
-            name: name,
-            action: action,
-            duration: duration || 'N/A'
-        };
-        let logs = JSON.parse(localStorage.getItem('ja_logs')) || [];
-        logs.push(newLog);
-        localStorage.setItem('ja_logs', JSON.stringify(logs));
-        displayLogs();
-    }
-
-    function displayLogs() {
-        const list = document.getElementById('logList');
-        let logs = JSON.parse(localStorage.getItem('ja_logs')) || [];
+// function para makuha ang lahat ng log ng kahit sinong gumamit
+async function displayLogs() {
+    const list = document.getElementById('logList');
+    try {
+        // Kukunin ang data mula sa internet
+        const res = await fetch(API_URL, {
+            headers: { "X-Master-Key": API_KEY }
+        });
+        const data = await res.json();
+        let logs = data.record.logs || [];
+        
         list.innerHTML = logs.slice().reverse().map(log => `
             <div class="log-item">
                 <span><b>${log.name}</b>: ${log.action}</span>
                 <span>${log.time}</span>
             </div>
         `).join('');
+    } catch (e) {
+        list.innerHTML = "Naglo-load ng shared logs...";
     }
+}
 
-    function extractLogs() {
-        let logs = JSON.parse(localStorage.getItem('ja_logs')) || [];
-        if (logs.length === 0) return alert("No logs found!");
-        let content = "DATE | TIME | OPERATOR | ACTION | DURATION\n" + logs.map(l => `${l.date} | ${l.time} | ${l.name} | ${l.action} | ${l.duration}`).join('\n');
-        const blob = new Blob([content], { type: 'text/plain' });
-        const a = document.createElement('a');
-        a.href = URL.createObjectURL(blob);
-        a.download = `JA_Logs_${new Date().toLocaleDateString()}.txt`;
-        a.click();
-    }
+async function saveLog(action, name, duration = "") {
+    const now = new Date();
+    const newLog = {
+        date: now.toLocaleDateString(),
+        time: now.toLocaleTimeString(),
+        name: name,
+        action: action,
+        duration: duration || 'N/A'
+    };
 
-    function clearLogs() {
-        if (confirm("Delete all history?")) {
-            localStorage.removeItem('ja_logs');
-            displayLogs();
-        }
-    }
-</script>
+    // 1. Kunin muna ang lumang logs sa cloud
+    const res = await fetch(API_URL, { headers: { "X-Master-Key": API_KEY } });
+    const currentData = await res.json();
+    let logs = currentData.record.logs || [];
 
-</body>
-</html>
+    // 2. Dagdag ang bago
+    logs.push(newLog);
+
+    // 3. I-save pabalik sa cloud
+    await fetch(API_URL, {
+        method: 'PUT',
+        headers: {
+            "Content-Type": "application/json",
+            "X-Master-Key": API_KEY
+        },
+        body: JSON.stringify({ logs: logs })
+    });
+
+    displayLogs();
+}
