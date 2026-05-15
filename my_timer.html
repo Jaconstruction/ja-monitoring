@@ -1,104 +1,156 @@
-// Gagamit tayo ng alternatibong imbakan na mas mabilis mag-sync
-const API_URL = "https://api.restful-api.dev/objects/jaconstruction_logs_2024";
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>JA Construction | Monitoring</title>
+    <style>
+        :root { --ja-orange: #FF6B00; --ja-dark: #121212; --white: #E0E0E0; --green: #2ECC71; --red: #E74C3C; }
+        body { background-color: #080808; font-family: 'Segoe UI', sans-serif; margin: 0; color: var(--white); display: flex; flex-direction: column; min-height: 100vh; }
+        .top-panel { padding: 30px 20px; text-align: center; background: linear-gradient(145deg, #161617 0%, #0c0c0d 100%); }
+        .brand-logo h1 { font-size: clamp(28px, 7vw, 50px); color: var(--ja-orange); margin: 0; font-weight: 900; }
+        .timer-display { font-size: clamp(60px, 15vw, 120px); font-weight: 900; margin: 15px 0; font-family: monospace; }
+        .button-group { display: flex; gap: 10px; padding: 0 20px; }
+        .btn { flex: 1; padding: 20px; border: none; border-radius: 12px; font-size: 18px; font-weight: bold; color: white; cursor: pointer; }
+        .btn-in { background-color: var(--green); }
+        .btn-out { background-color: var(--red); }
+        .log-panel { padding: 20px; background: #1A1A1B; flex-grow: 1; border-top: 2px solid #222; }
+        .input-box { background: #242425; padding: 15px; border-radius: 12px; margin-bottom: 15px; border-left: 5px solid var(--ja-orange); }
+        .input-box input { width: 100%; background: transparent; border: none; color: white; font-size: 18px; font-weight: bold; outline: none; }
+        .log-section { background: #0D0D0E; border-radius: 12px; height: 250px; overflow-y: auto; padding: 10px; margin-bottom: 15px; border: 1px solid #333; }
+        .log-item { display: flex; justify-content: space-between; font-size: 12px; padding: 10px 0; border-bottom: 1px solid #222; }
+        .btn-extract { width: 100%; background: var(--ja-orange); color: black; padding: 15px; border-radius: 10px; font-weight: bold; border: none; cursor: pointer; }
+    </style>
+</head>
+<body>
 
-let sec = 0; let timer; let isWorking = false;
+<div class="top-panel">
+    <div id="clock" style="font-size: 12px; color: #666; margin-bottom: 10px;">00:00:00</div>
+    <div class="brand-logo"><h1>JA CONSTRUCTION</h1></div>
+    <div class="timer-display" id="mainTimer">00:00:00</div>
+    <div class="button-group">
+        <button class="btn btn-in" id="actionBtn" onclick="handleTime()">TIME IN</button>
+    </div>
+</div>
 
-// Clock
-setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+<div class="log-panel">
+    <div class="input-box">
+        <input type="text" id="opName" placeholder="ENTER OPERATOR NAME...">
+    </div>
+    <div style="font-size: 10px; color: #555; text-align: center; margin-bottom: 5px;" id="syncStatus">Syncing...</div>
+    <div class="log-section" id="logList"></div>
+    <button class="btn-extract" onclick="extractLogs()">Extract All Master Logs</button>
+</div>
 
-// Auto-load logs
-setInterval(loadLogs, 5000);
-window.onload = loadLogs;
+<script>
+    const API_URL = "https://api.restful-api.dev/objects/jaconstruction_logs_final_v1";
+    let timerInterval;
+    let startTime;
+    let isWorking = false;
 
-async function loadLogs() {
-    try {
-        const res = await fetch(API_URL);
-        const data = await res.json();
-        // Dito natin kukunin ang listahan
-        const logs = JSON.parse(data.data.logString || "[]");
-        displayLogs(logs);
-        document.getElementById('syncStatus').innerText = "Live Master Sync Active";
-    } catch (e) { 
-        document.getElementById('syncStatus').innerText = "Syncing with local backup..."; 
+    setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
+
+    async function loadLogs() {
+        try {
+            const res = await fetch(API_URL);
+            const data = await res.json();
+            const logs = JSON.parse(data.data.logString || "[]");
+            const activeSessions = data.data.activeSessions || {};
+            
+            displayLogs(logs);
+            checkActiveSession(activeSessions);
+            document.getElementById('syncStatus').innerText = "Live Master Sync Active";
+        } catch (e) { document.getElementById('syncStatus').innerText = "Syncing..."; }
     }
-}
 
-function displayLogs(logs) {
-    const list = document.getElementById('logList');
-    list.innerHTML = logs.slice().reverse().map(l => `
-        <div class="log-item">
-            <span><b>${l.name}</b>: ${l.action}</span>
-            <span>${l.time}</span>
-        </div>
-    `).join('');
-}
+    function checkActiveSession(sessions) {
+        const name = document.getElementById('opName').value.toUpperCase();
+        if (name && sessions[name] && !isWorking) {
+            startTime = new Date(sessions[name]);
+            startTimer();
+            isWorking = true;
+            updateUI(true);
+        }
+    }
 
-async function handleTime() {
-    const name = document.getElementById('opName').value;
-    if (!name) return alert("Enter operator name!");
-    const btn = document.getElementById('actionBtn');
-    
-    if (!isWorking) {
-        isWorking = true; btn.innerText = "TIME OUT"; btn.className = "btn btn-out";
-        await saveToCloud("TIME IN", name.toUpperCase());
-        timer = setInterval(() => {
-            sec++;
-            let h = Math.floor(sec/3600).toString().padStart(2,'0');
-            let m = Math.floor((sec%3600)/60).toString().padStart(2,'0');
-            let s = (sec%60).toString().padStart(2,'0');
+    function startTimer() {
+        clearInterval(timerInterval);
+        timerInterval = setInterval(() => {
+            const now = new Date();
+            const diff = Math.floor((now - startTime) / 1000);
+            const h = Math.floor(diff / 3600).toString().padStart(2, '0');
+            const m = Math.floor((diff % 3600) / 60).toString().padStart(2, '0');
+            const s = (diff % 60).toString().padStart(2, '0');
             document.getElementById('mainTimer').innerText = `${h}:${m}:${s}`;
         }, 1000);
-    } else {
-        isWorking = false; clearInterval(timer);
-        await saveToCloud("TIME OUT", name.toUpperCase(), document.getElementById('mainTimer').innerText);
-        btn.innerText = "TIME IN"; btn.className = "btn btn-in";
-        document.getElementById('mainTimer').innerText = "00:00:00"; sec = 0;
     }
-}
 
-async function saveToCloud(action, name, dur = "") {
-    const now = new Date();
-    const newEntry = { date: now.toLocaleDateString(), time: now.toLocaleTimeString(), name, action, duration: dur || 'N/A' };
-    
-    try {
-        // Kunin ang current logs
+    async function handleTime() {
+        const name = document.getElementById('opName').value.toUpperCase();
+        if (!name) return alert("Enter operator name!");
+
         const res = await fetch(API_URL);
         const current = await res.json();
         let logs = JSON.parse(current.data.logString || "[]");
-        
-        // Dagdag ang bago
-        logs.push(newEntry);
-        
-        // I-update ang cloud
+        let sessions = current.data.activeSessions || {};
+
+        if (!isWorking) {
+            startTime = new Date();
+            sessions[name] = startTime.toISOString();
+            await syncCloud(logs, sessions);
+            isWorking = true;
+            updateUI(true);
+            startTimer();
+            addLogLocal(logs, "TIME IN", name);
+        } else {
+            const duration = document.getElementById('mainTimer').innerText;
+            delete sessions[name];
+            logs.push({ date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), name, action: "TIME OUT", duration });
+            await syncCloud(logs, sessions);
+            isWorking = false;
+            updateUI(false);
+            clearInterval(timerInterval);
+            document.getElementById('mainTimer').innerText = "00:00:00";
+        }
+    }
+
+    async function syncCloud(logs, sessions) {
         await fetch(API_URL, {
             method: 'PUT',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({
-                name: "JA_Logs",
-                data: { logString: JSON.stringify(logs) }
-            })
+            body: JSON.stringify({ name: "JA_Master", data: { logString: JSON.stringify(logs), activeSessions: sessions } })
         });
         loadLogs();
-    } catch (e) {
-        // Backup: Save locally kung mahina net
-        let localLogs = JSON.parse(localStorage.getItem('ja_backup') || "[]");
-        localLogs.push(newEntry);
-        localStorage.setItem('ja_backup', JSON.stringify(localLogs));
-        displayLogs(localLogs);
     }
-}
 
-async function extractLogs() {
-    try {
+    function updateUI(working) {
+        const btn = document.getElementById('actionBtn');
+        btn.innerText = working ? "TIME OUT" : "TIME IN";
+        btn.className = working ? "btn btn-out" : "btn btn-in";
+        document.getElementById('opName').disabled = working;
+    }
+
+    function displayLogs(logs) {
+        const list = document.getElementById('logList');
+        list.innerHTML = logs.slice().reverse().map(l => `
+            <div class="log-item"><span><b>${l.name}</b>: ${l.action}</span><span>${l.time}</span></div>
+        `).join('');
+    }
+
+    async function extractLogs() {
         const res = await fetch(API_URL);
         const data = await res.json();
         const logs = JSON.parse(data.data.logString || "[]");
-        let content = "DATE | TIME | OPERATOR | ACTION | DURATION\n" + 
-                      logs.map(l => `${l.date} | ${l.time} | ${l.name} | ${l.action} | ${l.duration}`).join('\n');
+        let content = "DATE | TIME | OPERATOR | ACTION | DURATION\n" + logs.map(l => `${l.date} | ${l.time} | ${l.name} | ${l.action} | ${l.duration}`).join('\n');
         const blob = new Blob([content], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
         a.download = `JA_Master_Logs.txt`;
         a.click();
-    } catch (e) { alert("Walang makuha sa cloud."); }
-}
+    }
+
+    window.onload = loadLogs;
+    setInterval(loadLogs, 10000);
+</script>
+</body>
+</html>
