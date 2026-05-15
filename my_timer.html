@@ -8,7 +8,7 @@
         :root { --ja-orange: #FF6B00; --ja-dark: #121212; --white: #E0E0E0; --green: #2ECC71; --red: #E74C3C; }
         body { background-color: #080808; font-family: 'Segoe UI', sans-serif; margin: 0; color: var(--white); display: flex; flex-direction: column; min-height: 100vh; overflow-x: hidden; }
         .top-panel { padding: 30px 20px; text-align: center; background: linear-gradient(145deg, #161617 0%, #0c0c0d 100%); }
-        .brand-logo h1 { font-size: clamp(28px, 7vw, 50px); color: var(--ja-orange); margin: 0; font-weight: 900; }
+        .brand-logo h1 { font-size: clamp(24px, 6vw, 40px); color: var(--ja-orange); margin: 0; font-weight: 900; }
         .timer-display { font-size: clamp(50px, 12vw, 100px); font-weight: 900; margin: 15px 0; font-family: monospace; color: #FFF; }
         .button-group { display: flex; gap: 10px; padding: 0 20px; }
         .btn { flex: 1; padding: 18px; border: none; border-radius: 12px; font-size: 16px; font-weight: bold; color: white; cursor: pointer; text-transform: uppercase; }
@@ -37,26 +37,25 @@
     <div class="input-box">
         <input type="text" id="opName" placeholder="ENTER OPERATOR NAME..." oninput="checkStatus()">
     </div>
-    <div id="syncStatus" style="font-size:10px; color:#555; text-align:center; margin-bottom:5px;">Ready</div>
+    <div id="syncStatus" style="font-size:10px; color:#555; text-align:center; margin-bottom:5px;">System Active</div>
     <div class="log-section" id="logList"></div>
     <button class="btn-extract" onclick="extractLogs()">Extract All Master Logs</button>
 </div>
 
 <script>
-    // Database URL
-    const API_URL = "https://api.restful-api.dev/objects/ja_master_log_final_2024";
     let timerInterval;
     let isWorking = false;
 
-    // Clock
+    // Real-time Clock
     setInterval(() => { document.getElementById('clock').innerText = new Date().toLocaleTimeString(); }, 1000);
 
-    // Magsisimula rito: Check kung may tumatakbong oras sa phone
+    // Kapag nag-load ang page
     window.onload = function() {
         loadLogsFromLocal();
         checkStatus();
     };
 
+    // Ito ang titingin kung may "ongoing" na timer ang pangalan na tinype
     function checkStatus() {
         const name = document.getElementById('opName').value.toUpperCase().trim();
         const savedStart = localStorage.getItem('startTime_' + name);
@@ -84,24 +83,23 @@
         }, 1000);
     }
 
-    async function handleTime() {
+    function handleTime() {
         const name = document.getElementById('opName').value.toUpperCase().trim();
         if (!name) return alert("Enter Operator Name!");
 
         if (!isWorking) {
-            // TIME IN
+            // TIME IN: I-save ang oras sa phone memory
             const now = new Date();
             localStorage.setItem('startTime_' + name, now.toISOString());
             addLogLocal(name, "TIME IN", "---");
             checkStatus();
         } else {
-            // TIME OUT
+            // TIME OUT: Kunin ang final duration
             const duration = document.getElementById('mainTimer').innerText;
             localStorage.removeItem('startTime_' + name);
             addLogLocal(name, "TIME OUT", duration);
             checkStatus();
         }
-        syncToCloud(); // Subukan mag-save sa net pero hindi mag-e-error kung fail
     }
 
     function addLogLocal(name, action, duration) {
@@ -137,7 +135,6 @@
         document.getElementById('opName').disabled = working;
     }
 
-    // Extraction: Kahit walang net, makukuha mo ang logs sa phone
     function extractLogs() {
         const logs = JSON.parse(localStorage.getItem('ja_logs') || "[]");
         let content = "DATE | TIME | OPERATOR | ACTION | DURATION\n" + 
@@ -145,23 +142,8 @@
         const blob = new Blob([content], { type: 'text/plain' });
         const a = document.createElement('a');
         a.href = URL.createObjectURL(blob);
-        a.download = `JA_LOGS.txt`;
+        a.download = `JA_LOGS_REPORT.txt`;
         a.click();
-    }
-
-    // Silent Sync: Hindi ito mag-a-alert ng "Connection Error"
-    async function syncToCloud() {
-        const logs = localStorage.getItem('ja_logs');
-        try {
-            await fetch(API_URL, {
-                method: 'PUT',
-                headers: { 'Content-Type': 'application/json' },
-                body: JSON.stringify({ name: "JA_Project", data: { logString: logs } })
-            });
-            document.getElementById('syncStatus').innerText = "Cloud Synced";
-        } catch (e) {
-            document.getElementById('syncStatus').innerText = "Saved Locally (No Net)";
-        }
     }
 </script>
 </body>
