@@ -37,13 +37,13 @@
     <div class="input-box">
         <input type="text" id="opName" placeholder="ENTER OPERATOR NAME...">
     </div>
-    <div style="font-size: 10px; color: #555; text-align: center; margin-bottom: 5px;" id="syncStatus">Syncing...</div>
+    <div style="font-size: 10px; color: #555; text-align: center; margin-bottom: 5px;" id="syncStatus">Connecting...</div>
     <div class="log-section" id="logList"></div>
     <button class="btn-extract" onclick="extractLogs()">Extract All Master Logs</button>
 </div>
 
 <script>
-    const API_URL = "https://api.restful-api.dev/objects/jaconstruction_logs_final_v1";
+    const API_URL = "https://api.restful-api.dev/objects/jaconstruction_live_v2";
     let timerInterval;
     let startTime;
     let isWorking = false;
@@ -89,29 +89,31 @@
         const name = document.getElementById('opName').value.toUpperCase();
         if (!name) return alert("Enter operator name!");
 
-        const res = await fetch(API_URL);
-        const current = await res.json();
-        let logs = JSON.parse(current.data.logString || "[]");
-        let sessions = current.data.activeSessions || {};
+        try {
+            const res = await fetch(API_URL);
+            const current = await res.json();
+            let logs = JSON.parse(current.data.logString || "[]");
+            let sessions = current.data.activeSessions || {};
 
-        if (!isWorking) {
-            startTime = new Date();
-            sessions[name] = startTime.toISOString();
-            await syncCloud(logs, sessions);
-            isWorking = true;
-            updateUI(true);
-            startTimer();
-            addLogLocal(logs, "TIME IN", name);
-        } else {
-            const duration = document.getElementById('mainTimer').innerText;
-            delete sessions[name];
-            logs.push({ date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), name, action: "TIME OUT", duration });
-            await syncCloud(logs, sessions);
-            isWorking = false;
-            updateUI(false);
-            clearInterval(timerInterval);
-            document.getElementById('mainTimer').innerText = "00:00:00";
-        }
+            if (!isWorking) {
+                startTime = new Date();
+                sessions[name] = startTime.toISOString();
+                logs.push({ date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), name, action: "TIME IN", duration: "---" });
+                await syncCloud(logs, sessions);
+                isWorking = true;
+                updateUI(true);
+                startTimer();
+            } else {
+                const duration = document.getElementById('mainTimer').innerText;
+                delete sessions[name];
+                logs.push({ date: new Date().toLocaleDateString(), time: new Date().toLocaleTimeString(), name, action: "TIME OUT", duration });
+                await syncCloud(logs, sessions);
+                isWorking = false;
+                updateUI(false);
+                clearInterval(timerInterval);
+                document.getElementById('mainTimer').innerText = "00:00:00";
+            }
+        } catch (e) { alert("Connection Error. Try again."); }
     }
 
     async function syncCloud(logs, sessions) {
